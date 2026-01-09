@@ -18,28 +18,25 @@ impl<const SIZE: usize> Default for Flags<SIZE> {
 }
 
 impl<const SIZE: usize> Flags<SIZE> {
-    pub fn add_flag<T: Flag + Default + Copy>(&mut self, flag: T) {
+    pub fn add_flag<T: Flag + Copy>(&mut self, flag: T) {
         let u_flag = flag.into_usize();
-        let p_chunk = &mut self._data[u_flag / 8] as *mut u8;
-        let bit = u_flag % 8;
-        unsafe {
-            *p_chunk = *p_chunk | (1u8 << bit as u8);
+        if let Some(byte) = self._data.get_mut(u_flag / 8) {
+            *byte |= 1u8 << (u_flag % 8);
         }
     }
 
-    pub fn has_flag<T: Flag + Default + Copy>(&self, flag: T) -> bool {
+    pub fn has_flag<T: Flag + Copy>(&self, flag: T) -> bool {
         let u_flag = flag.into_usize();
-        let p_chunk = &self._data[u_flag / 8] as *const u8;
-        let bit = u_flag % 8;
-        unsafe { *p_chunk & (1u8 << bit as u8) == (1u8 << bit as u8) }
+        match self._data.get(u_flag / 8) {
+            Some(byte) => (byte & (1u8 << (u_flag % 8))) != 0,
+            None => false,
+        }
     }
 
-    pub fn remove_flag<T: Flag + Default + Copy>(&mut self, flag: T) {
+    pub fn remove_flag<T: Flag + Copy>(&mut self, flag: T) {
         let u_flag = flag.into_usize();
-        let p_chunk = &mut self._data[u_flag / 8] as *mut u8;
-        let bit = u_flag % 8;
-        unsafe {
-            *p_chunk = *p_chunk & !(1u8 << bit as u8);
+        if let Some(byte) = self._data.get_mut(u_flag / 8) {
+            *byte &= !(1u8 << (u_flag % 8));
         }
     }
 }
